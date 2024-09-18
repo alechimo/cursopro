@@ -1,0 +1,255 @@
+<html><head><base href="https://cursopro.github.io/cursos/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curso de Photoshop - CursoPro</title>
+  <meta name="description" content="Aprende Photoshop desde cero con nuestro curso gratuito. Domina las técnicas esenciales y avanzadas de edición de imágenes.">
+  <meta name="duration" content="1 hora y 53 minutos">
+  <meta property="og:image" content="https://img.youtube.com/vi/X7vAjtf8QuI/maxresdefault.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --text-color: #333;
+      --background-color: #f9f9f9;
+      --card-background: #ffffff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body, html {
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--background-color);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+      margin-bottom: 2rem;
+    }
+    
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .course-info {
+      background-color: var(--card-background);
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .course-description {
+      margin-bottom: 1rem;
+    }
+    
+    .course-duration {
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: var(--card-background);
+      margin: 15% auto;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    
+    .price {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin: 1rem 0;
+    }
+    
+    .promotion {
+      background-color: #f39c12;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+    
+    #countdown {
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Curso de Photoshop</h1>
+    
+    <div class="video-container">
+      <iframe src="https://www.youtube.com/embed/X7vAjtf8QuI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+    
+    <div class="course-info">
+      <p class="course-duration">Duración del curso: 1 hora y 53 minutos</p>
+      <p class="course-description">
+        Este curso completo de Photoshop te llevará desde los conceptos básicos hasta técnicas avanzadas de edición de imágenes. Aprenderás a utilizar las herramientas esenciales, trabajar con capas, aplicar efectos y mucho más. Al finalizar, serás capaz de crear y editar imágenes profesionales para diversos proyectos.
+      </p>
+      <button id="finishCourseBtn" class="btn">Curso finalizado</button>
+    </div>
+  </div>
+
+  <div id="certificateModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Obtener Certificado</h2>
+      <p class="price">$4,99</p>
+      <p class="promotion">Antes $25, quedan <span id="countdown"></span> para que termine la promoción</p>
+      <a href="https://wa.me/584245945666" class="btn" target="_blank">Click aquí para obtener tu certificado</a>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+  <script>
+    const modal = document.getElementById("certificateModal");
+    const btn = document.getElementById("finishCourseBtn");
+    const span = document.getElementsByClassName("close")[0];
+    const countdownElement = document.getElementById("countdown");
+
+    btn.onclick = function() {
+      modal.style.display = "block";
+      startCountdown();
+    }
+
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+
+    function startCountdown() {
+      let time = 1800; // 30 minutos en segundos
+      
+      function updateCountdown() {
+        const minutes = Math.floor(time / 60);
+        let seconds = time % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        countdownElement.innerHTML = `${minutes}:${seconds}`;
+        
+        if (time > 0) {
+          time--;
+          setTimeout(updateCountdown, 1000);
+        } else {
+          countdownElement.innerHTML = "¡Oferta terminada!";
+        }
+      }
+      
+      updateCountdown();
+    }
+
+    // Animaciones con GSAP
+    gsap.from("h1", {opacity: 0, y: -50, duration: 1});
+    gsap.from(".video-container", {opacity: 0, y: 50, duration: 1, delay: 0.5});
+    gsap.from(".course-info", {opacity: 0, y: 50, duration: 1, delay: 1});
+    
+    // Animación del botón
+    const button = document.querySelector("#finishCourseBtn");
+    button.addEventListener("mouseenter", () => {
+      gsap.to(button, {scale: 1.1, duration: 0.3});
+    });
+    button.addEventListener("mouseleave", () => {
+      gsap.to(button, {scale: 1, duration: 0.3});
+    });
+
+    // Animación de la ventana modal
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        gsap.to(modal, {opacity: 0, duration: 0.3, onComplete: () => {
+          modal.style.display = "none";
+          modal.style.opacity = 1;
+        }});
+      }
+    });
+  </script>
+</body>
+</html>
