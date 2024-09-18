@@ -1,6 +1,4 @@
-<html lang="es">
-<head>
-  <base href="https://cursopro.github.io/cursopro/cursos">
+<html><head><base href="https://cursopro.github.io/cursopro/cursos">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CursoPro - Explora Nuestros Cursos Gratuitos</title>
@@ -182,7 +180,7 @@
 <body>
   <header>
     <nav>
-      <a href="https://cursopro.github.io/cursopro/" class="logo">CursoPro</a>
+      <a href="/" class="logo">CursoPro</a>
     </nav>
   </header>
   
@@ -205,25 +203,27 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>
   <script>
-    gsap.registerPlugin(ScrollTrigger);
-
     const coursesContainer = document.getElementById('coursesContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const searchInput = document.getElementById('searchInput');
 
     async function loadCourses() {
+      loadingSpinner.style.display = 'flex';
+
       try {
-        const response = await fetch('/elementos/cursos/');
-        const data = await response.json();
+        // Fetch the list of course files from the server
+        const response = await fetch('https://github.com/cursopro/cursopro');
+        if (!response.ok) {
+          throw new Error('Failed to fetch course list');
+        }
+        const files = await response.json();
+        
+        const courseFiles = files.filter(file => file.name.startsWith('curso_') && file.name.endsWith('.html'));
 
-        let coursesLoaded = 0;
-
-        for (const file of data) {
-          if (file.name.endsWith('.html') && file.name.startsWith('curso_')) {
-            const coursePath = `elementos/cursos/${file.name}`;
-            const courseResponse = await fetch(coursePath);
-            const courseContent = await courseResponse.text();
-
+        for (const file of courseFiles) {
+          const coursePath = file.path;
+          try {
+            const courseContent = await fetchCourseContent(file.download_url);
             const parser = new DOMParser();
             const doc = parser.parseFromString(courseContent, 'text/html');
             
@@ -245,21 +245,29 @@
             `;
 
             coursesContainer.appendChild(courseCard);
-            coursesLoaded++;
+          } catch (error) {
+            console.error('Error al acceder al archivo:', coursePath, error);
           }
         }
 
-        if (coursesLoaded === 0) {
+        if (coursesContainer.children.length === 0) {
           coursesContainer.innerHTML = '<p>No se encontraron cursos disponibles.</p>';
         }
-        
+      } catch (error) {
+        console.error('Error al cargar la lista de cursos:', error);
+        coursesContainer.innerHTML = '<p>Error al cargar los cursos. Por favor, intenta más tarde.</p>';
+      } finally {
         loadingSpinner.style.display = 'none';
         applyAnimations();
-      } catch (error) {
-        console.error('Error al cargar los cursos:', error);
-        loadingSpinner.style.display = 'none';
-        coursesContainer.innerHTML = '<p>Error al cargar los cursos. Por favor, intente más tarde.</p>';
       }
+    }
+
+    async function fetchCourseContent(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch course content');
+      }
+      return await response.text();
     }
 
     function applyAnimations() {
@@ -302,7 +310,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadCourses);
-
   </script>
 </body>
 </html>
