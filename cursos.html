@@ -1,4 +1,6 @@
-<html><head><base href="https://cursopro.github.io/cursos/">
+<html lang="es">
+<head>
+  <base href="https://cursopro.github.io/cursopro/cursos">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CursoPro - Explora Nuestros Cursos Gratuitos</title>
@@ -140,6 +142,41 @@
         grid-template-columns: 1fr;
       }
     }
+
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--primary-color);
+      border-top: 5px solid var(--secondary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .search-container {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    #searchInput {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: 2px solid var(--primary-color);
+      border-radius: 5px;
+      width: 100%;
+      max-width: 400px;
+    }
   </style>
 </head>
 <body>
@@ -152,6 +189,14 @@
   <main>
     <h1>Explora Nuestros Cursos Gratuitos</h1>
     
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Buscar cursos...">
+    </div>
+
+    <div class="loading-container" id="loadingSpinner">
+      <div class="loading-spinner"></div>
+    </div>
+    
     <div class="courses-grid" id="coursesContainer">
       <!-- Los cursos se cargarán aquí dinámicamente -->
     </div>
@@ -162,29 +207,30 @@
   <script>
     gsap.registerPlugin(ScrollTrigger);
 
-    // Función para cargar los cursos dinámicamente
+    const coursesContainer = document.getElementById('coursesContainer');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const searchInput = document.getElementById('searchInput');
+
     async function loadCourses() {
-      const coursesContainer = document.getElementById('coursesContainer');
-      
       try {
-        const response = await fetch('elementos/cursos');
+        const response = await fetch('/elementos/cursos/');
         const data = await response.json();
-        
+
+        let coursesLoaded = 0;
+
         for (const file of data) {
-          if (file.name.endsWith('.html')) {
-            const courseResponse = await fetch(file.download_url);
+          if (file.name.endsWith('.html') && file.name.startsWith('curso_')) {
+            const coursePath = `elementos/cursos/${file.name}`;
+            const courseResponse = await fetch(coursePath);
             const courseContent = await courseResponse.text();
-            
-            // Extraer información del curso del contenido HTML
+
             const parser = new DOMParser();
             const doc = parser.parseFromString(courseContent, 'text/html');
             
             const title = doc.querySelector('h1')?.textContent || 'Título no disponible';
             const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || 'Descripción no disponible';
-            const duration = doc.querySelector('meta[name="duration"]')?.getAttribute('content') || 'Duración no especificada';
             const thumbnail = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || 'https://via.placeholder.com/300x200.png?text=No+Image';
-            
-            // Crear elemento de tarjeta de curso
+
             const courseCard = document.createElement('div');
             courseCard.className = 'course-card';
             courseCard.innerHTML = `
@@ -193,26 +239,30 @@
                 <h2 class="course-title">${title}</h2>
                 <p class="course-description">${description}</p>
                 <div class="course-meta">
-                  <span>Duración: ${duration}</span>
-                  <a href="${file.name}" class="enroll-btn">Inscribirse</a>
+                  <a href="${coursePath}" class="enroll-btn">Inscribirse</a>
                 </div>
               </div>
             `;
-            
+
             coursesContainer.appendChild(courseCard);
+            coursesLoaded++;
           }
         }
+
+        if (coursesLoaded === 0) {
+          coursesContainer.innerHTML = '<p>No se encontraron cursos disponibles.</p>';
+        }
         
-        // Aplicar animaciones después de cargar los cursos
+        loadingSpinner.style.display = 'none';
         applyAnimations();
       } catch (error) {
         console.error('Error al cargar los cursos:', error);
+        loadingSpinner.style.display = 'none';
+        coursesContainer.innerHTML = '<p>Error al cargar los cursos. Por favor, intente más tarde.</p>';
       }
     }
 
-    // Función para aplicar animaciones
     function applyAnimations() {
-      // Animación de entrada para el título
       gsap.from('h1', {
         opacity: 0,
         y: -50,
@@ -223,7 +273,6 @@
         }
       });
 
-      // Animación de entrada para las tarjetas de cursos
       gsap.from('.course-card', {
         opacity: 0,
         y: 50,
@@ -234,30 +283,26 @@
           start: 'top 80%',
         }
       });
+    }
 
-      // Efecto hover para las tarjetas de cursos
-      document.querySelectorAll('.course-card').forEach(card => {
-        card.addEventListener('mouseenter', () => {
-          gsap.to(card, {scale: 1.05, duration: 0.3});
-        });
-        card.addEventListener('mouseleave', () => {
-          gsap.to(card, {scale: 1, duration: 0.3});
-        });
-      });
+    searchInput.addEventListener('input', filterCourses);
 
-      // Animación del botón de inscripción en hover
-      document.querySelectorAll('.enroll-btn').forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-          gsap.to(btn, {scale: 1.1, duration: 0.3});
-        });
-        btn.addEventListener('mouseleave', () => {
-          gsap.to(btn, {scale: 1, duration: 0.3});
-        });
+    function filterCourses() {
+      const filter = searchInput.value.toLowerCase();
+      const courses = coursesContainer.getElementsByClassName('course-card');
+
+      Array.from(courses).forEach(course => {
+        const title = course.querySelector('.course-title').textContent.toLowerCase();
+        if (title.includes(filter)) {
+          course.style.display = '';
+        } else {
+          course.style.display = 'none';
+        }
       });
     }
 
-    // Cargar los cursos cuando la página esté lista
     document.addEventListener('DOMContentLoaded', loadCourses);
+
   </script>
 </body>
 </html>
