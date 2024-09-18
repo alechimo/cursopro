@@ -1,4 +1,4 @@
-<html><head><base href="https://cursopro.github.io/cursopro/cursos">
+<html><head><base href="https://cursopro.github.io/cursopro/cursos/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CursoPro - Explora Nuestros Cursos Gratuitos</title>
@@ -180,7 +180,7 @@
 <body>
   <header>
     <nav>
-      <a href="/" class="logo">CursoPro</a>
+      <a href="https://cursopro.github.io/cursopro/" class="logo">CursoPro</a>
     </nav>
   </header>
   
@@ -207,67 +207,66 @@
     const loadingSpinner = document.getElementById('loadingSpinner');
     const searchInput = document.getElementById('searchInput');
 
-    async function loadCourses() {
-      loadingSpinner.style.display = 'flex';
+    // Aquí es donde debes agregar los enlaces a tus cursos
+    const courseLinks = [
+      
+"https://cursopro.github.io/cursopro/curso_photoshop", "https://cursopro.github.io/cursopro/curso_communitymanager", "https://cursopro.github.io/cursopro/curso_adobepremiere"
+];
 
+    async function fetchCourseInfo(link) {
       try {
-        // Fetch the list of course files from the server
-        const response = await fetch('https://github.com/cursopro/cursopro');
-        if (!response.ok) {
-          throw new Error('Failed to fetch course list');
-        }
-        const files = await response.json();
-        
-        const courseFiles = files.filter(file => file.name.startsWith('curso_') && file.name.endsWith('.html'));
+        const response = await fetch(link);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
-        for (const file of courseFiles) {
-          const coursePath = file.path;
-          try {
-            const courseContent = await fetchCourseContent(file.download_url);
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(courseContent, 'text/html');
-            
-            const title = doc.querySelector('h1')?.textContent || 'Título no disponible';
-            const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || 'Descripción no disponible';
-            const thumbnail = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || 'https://via.placeholder.com/300x200.png?text=No+Image';
+        const title = doc.querySelector('title').textContent;
+        const description = doc.querySelector('meta[name="description"]')?.content || 'Sin descripción disponible';
+        const thumbnailMeta = doc.querySelector('meta[property="og:image"]');
+        const thumbnail = thumbnailMeta ? thumbnailMeta.content : 'https://via.placeholder.com/300x200?text=Sin+imagen';
 
-            const courseCard = document.createElement('div');
-            courseCard.className = 'course-card';
-            courseCard.innerHTML = `
-              <img src="${thumbnail}" alt="${title}" class="course-image">
-              <div class="course-content">
-                <h2 class="course-title">${title}</h2>
-                <p class="course-description">${description}</p>
-                <div class="course-meta">
-                  <a href="${coursePath}" class="enroll-btn">Inscribirse</a>
-                </div>
-              </div>
-            `;
-
-            coursesContainer.appendChild(courseCard);
-          } catch (error) {
-            console.error('Error al acceder al archivo:', coursePath, error);
-          }
-        }
-
-        if (coursesContainer.children.length === 0) {
-          coursesContainer.innerHTML = '<p>No se encontraron cursos disponibles.</p>';
-        }
+        return { title, description, thumbnail, link };
       } catch (error) {
-        console.error('Error al cargar la lista de cursos:', error);
-        coursesContainer.innerHTML = '<p>Error al cargar los cursos. Por favor, intenta más tarde.</p>';
-      } finally {
-        loadingSpinner.style.display = 'none';
-        applyAnimations();
+        console.error('Error fetching course info:', error);
+        return null;
       }
     }
 
-    async function fetchCourseContent(url) {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch course content');
+    async function displayCourses() {
+      coursesContainer.innerHTML = '';
+      loadingSpinner.style.display = 'flex';
+
+      const coursePromises = courseLinks.map(fetchCourseInfo);
+      const courses = await Promise.all(coursePromises);
+
+      loadingSpinner.style.display = 'none';
+
+      courses.filter(Boolean).forEach(course => {
+        const courseCard = createCourseCard(course);
+        coursesContainer.appendChild(courseCard);
+      });
+
+      if (coursesContainer.children.length === 0) {
+        coursesContainer.innerHTML = '<p>No se encontraron cursos disponibles.</p>';
       }
-      return await response.text();
+
+      applyAnimations();
+    }
+
+    function createCourseCard(course) {
+      const courseCard = document.createElement('div');
+      courseCard.className = 'course-card';
+      courseCard.innerHTML = `
+        <img src="${course.thumbnail}" alt="${course.title}" class="course-image">
+        <div class="course-content">
+          <h2 class="course-title">${course.title}</h2>
+          <p class="course-description">${course.description}</p>
+          <div class="course-meta">
+            <a href="${course.link}" class="enroll-btn" target="_blank">Inscribirse</a>
+          </div>
+        </div>
+      `;
+      return courseCard;
     }
 
     function applyAnimations() {
@@ -295,21 +294,27 @@
 
     searchInput.addEventListener('input', filterCourses);
 
-    function filterCourses() {
+    async function filterCourses() {
       const filter = searchInput.value.toLowerCase();
-      const courses = coursesContainer.getElementsByClassName('course-card');
+      const coursePromises = courseLinks.map(fetchCourseInfo);
+      const courses = await Promise.all(coursePromises);
 
-      Array.from(courses).forEach(course => {
-        const title = course.querySelector('.course-title').textContent.toLowerCase();
-        if (title.includes(filter)) {
-          course.style.display = '';
-        } else {
-          course.style.display = 'none';
-        }
+      const filteredCourses = courses.filter(course => 
+        course && course.title.toLowerCase().includes(filter)
+      );
+
+      coursesContainer.innerHTML = '';
+      filteredCourses.forEach(course => {
+        const courseCard = createCourseCard(course);
+        coursesContainer.appendChild(courseCard);
       });
     }
 
-    document.addEventListener('DOMContentLoaded', loadCourses);
+    function init() {
+      displayCourses();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
