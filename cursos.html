@@ -167,7 +167,7 @@
       const coursesContainer = document.getElementById('coursesContainer');
       
       try {
-        const response = await fetch('https://api.github.com/repos/cursopro/cursos/contents/elementos/cursos');
+        const response = await fetch('elementos/cursos');
         const data = await response.json();
         
         for (const file of data) {
